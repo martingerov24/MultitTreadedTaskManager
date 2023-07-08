@@ -5,93 +5,30 @@
 
 #include <map>
 #include <functional>
+#include <random>
+#include <queue>
 
 namespace TaskSystem {
 
-
-/**
- * @brief The task system main class that can accept tasks to be scheduled and execute them on multiple threads
- *
- */
-struct TaskSystemExecutor {
-private:
+class TaskSystemExecutor {
     TaskSystemExecutor(int threadCount) {};
 public:
     TaskSystemExecutor(const TaskSystemExecutor &) = delete;
     TaskSystemExecutor &operator=(const TaskSystemExecutor &) = delete;
 
+    static void Init(int threadCount);
     static TaskSystemExecutor &GetInstance();
 
-    /**
-     * @brief Initialisation called once by the main application to allocate needed resources and start threads
-     *
-     * @param threadCount the desired number of threads to utilize
-     */
-    static void Init(int threadCount) {
-        delete self;
-        self = new TaskSystemExecutor(threadCount);
-    }
-
-    struct TaskID {};
-
-    /**
-     * @brief Schedule a task with specific priority to be executed
-     *
-     * @param task the parameters describing the task, Executor will be instantiated based on the expected name
-     * @param priority the task priority, bigger means executer sooner
-     * @return TaskID unique identifier used in later calls to wait or schedule callbacks for tasks
-     */
-    TaskID ScheduleTask(std::unique_ptr<Task> task, int priority) {
-        std::unique_ptr<Executor> exec(executors[task->GetExecutorName()](std::move(task)));
-
-        while (exec->ExecuteStep(0, 1) != Executor::ExecStatus::ES_Stop)
-            ;
-
-        return TaskID{};
-    }
-
-    /**
-     * @brief Blocking wait for a given task. Does not block if the task has already finished
-     *
-     * @param task the task to wait for
-     */
-    void WaitForTask(TaskID task) {
-        return;
-    }
-
-    /**
-     * @brief Register a callback to be executed when a task has finished executing. Executes the callbacl
-     *        immediately if the task has already finished
-     *
-     * @param task the task that was previously scheduled
-     * @param callback the callback to be executed
-     */
-    void OnTaskCompleted(TaskID task, std::function<void(TaskID)> &&callback) {
-        callback(task);
-    }
-
-    /**
-     * @brief Load a dynamic library from a path and attempt to call OnLibraryInit
-     *
-     * @param path the path to the dynamic library
-     * @return true when OnLibraryInit is found, false otherwise
-     */
+    void WaitForTask(TaskID task);
+    TaskID ScheduleTask(std::unique_ptr<Task> task, int priority);
+    void OnTaskCompleted(TaskID task, std::function<void(TaskID)> &&callback);
     bool LoadLibrary(const std::string &path);
-
-    /**
-     * @brief Register an executor with a name and constructor function. Should be called from
-     *        inside the dynamic libraries defining executors.
-     *
-     * @param executorName the name associated with the executor
-     * @param constructor constructor returning new instance of the executor
-     */
-    void Register(const std::string &executorName, ExecutorConstructor constructor) {
-        executors[executorName] = constructor;
-    }
-
+    void Register(const std::string &executorName, ExecutorConstructor constructor);
 private:
     static TaskSystemExecutor *self;
-    std::map<std::string, ExecutorConstructor> executors;
+    std::map<std::string, ExecutorConstructor> m_executors;
+    std::map<TaskID, std::function<void()>> m_callbacks;
+    std::priority_queue<TaskID> m_priority_queue;
 };
 
 };

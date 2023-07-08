@@ -40,7 +40,13 @@ struct RaytracerParams : Task {
 void testRenderer() {
     TaskSystemExecutor &ts = TaskSystemExecutor::GetInstance();
 
+#if defined(_WIN32) || defined(_WIN64)
+    const bool libLoaded = ts.LoadLibrary("libRaytracerExecutor.dll");
+#elif defined(__APPLE__)
     const bool libLoaded = ts.LoadLibrary("libRaytracerExecutor.dylib");
+#elif defined(__linux__)
+    const bool libLoaded = ts.LoadLibrary("../libRaytracerExecutor.so");
+#endif
     assert(libLoaded);
     std::unique_ptr<Task> task = std::make_unique<RaytracerParams>("Example");
 
@@ -55,7 +61,7 @@ void testPrinter() {
 #elif defined(__APPLE__)
     const bool libLoaded = ts.LoadLibrary("libPrinterExecutor.dylib");
 #elif defined(__linux__)
-    const bool libLoaded = ts.LoadLibrary("libPrinterExecutor.so");
+    const bool libLoaded = ts.LoadLibrary("../libPrinterExecutor.so");
 #endif
     assert(libLoaded);
 
@@ -80,7 +86,7 @@ void testPrinter() {
 int main(int argc, char *argv[]) {
     TaskSystemExecutor::Init(4);
 
-    testPrinter();
+    testRenderer();
 
     return 0;
 }
