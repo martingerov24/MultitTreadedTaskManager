@@ -12,7 +12,7 @@
 namespace TaskSystem {
 
 TaskSystemExecutor::TaskSystemExecutor(int threadCount)
-:tm(ThreadManager::GetInstance())
+: tm(ThreadManager::GetInstance())
 , m_priority_queue(PriorityComparator()) {}
 
 TaskSystemExecutor* TaskSystemExecutor::self = nullptr;
@@ -23,8 +23,8 @@ TaskSystemExecutor &TaskSystemExecutor::GetInstance() {
 
 void TaskSystemExecutor::Init(int threadCount) {
     delete self;
-    self = new TaskSystemExecutor(threadCount);
     ThreadManager::Init(threadCount);
+    self = new TaskSystemExecutor(threadCount);
 }
 
 bool TaskSystemExecutor::LoadLibrary(const std::string &path) {

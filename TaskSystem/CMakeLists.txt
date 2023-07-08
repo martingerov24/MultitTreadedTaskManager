@@ -4,6 +4,8 @@ set (CMAKE_CXX_STANDARD 17)
 
 set(SOURCES
     TaskSystem.cpp
+    Executor.cpp
+    Task.cpp
     main.cpp
 )
 

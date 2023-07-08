@@ -58,15 +58,10 @@ public:
 	ThreadManager(const ThreadManager &) = delete;
 	ThreadManager& operator=(const ThreadManager &) = delete;
 
-    
-    static void Init(int threadCount) {
-        delete self;
-        self = new ThreadManager(threadCount);
-    }
+    static void Init(int threadCount);
 
-    static ThreadManager &GetInstance() {
-        return *self;
-    }
+    static ThreadManager &GetInstance();
+
 	/// Start up all threads, must be called before @runThreads is called
 	void start();
 
