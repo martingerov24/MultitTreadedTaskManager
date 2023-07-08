@@ -2,7 +2,6 @@
 
 #include "Task.h"
 #include "Executor.h"
-
 #include <map>
 #include <functional>
 #include <random>
@@ -10,8 +9,10 @@
 
 namespace TaskSystem {
 
+class ThreadManager;
+
 class TaskSystemExecutor {
-    TaskSystemExecutor(int threadCount) {};
+    TaskSystemExecutor(int threadCount);
 public:
     TaskSystemExecutor(const TaskSystemExecutor &) = delete;
     TaskSystemExecutor &operator=(const TaskSystemExecutor &) = delete;
@@ -27,8 +28,8 @@ public:
 private:
     static TaskSystemExecutor *self;
     std::map<std::string, ExecutorConstructor> m_executors;
-    std::map<TaskID, std::function<void()>> m_callbacks;
-    std::priority_queue<TaskID> m_priority_queue;
+    std::priority_queue<std::unique_ptr<Task>, std::vector<std::unique_ptr<Task>>, PriorityComparator> m_priority_queue;
+    ThreadManager& tm;
 };
 
 };

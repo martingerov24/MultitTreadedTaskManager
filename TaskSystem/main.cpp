@@ -50,7 +50,7 @@ void testRenderer() {
     assert(libLoaded);
     std::unique_ptr<Task> task = std::make_unique<RaytracerParams>("Example");
 
-    TaskSystemExecutor::TaskID id = ts.ScheduleTask(std::move(task), 1);
+    TaskID id = ts.ScheduleTask(std::move(task), 1);
     ts.WaitForTask(id);
 }
 
@@ -70,13 +70,13 @@ void testPrinter() {
     std::unique_ptr<Task> p2 = std::make_unique<PrinterParams>(100, 25);
 
     // give some time for the first task to execute
-    TaskSystemExecutor::TaskID id1 = ts.ScheduleTask(std::move(p1), 10);
+    TaskID id1 = ts.ScheduleTask(std::move(p1), 10);
     std::this_thread::sleep_for(std::chrono::milliseconds(300));
 
     // insert bigger priority task, TaskSystem should switch to it
-    TaskSystemExecutor::TaskID id2 = ts.ScheduleTask(std::move(p2), 20);
+    TaskID id2 = ts.ScheduleTask(std::move(p2), 20);
 
-    ts.OnTaskCompleted(id1, [](TaskSystemExecutor::TaskID id) {
+    ts.OnTaskCompleted(id1, [](TaskID id) {
         printf("Task 1 finished\n");
     });
     ts.WaitForTask(id2);
