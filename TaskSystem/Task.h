@@ -8,14 +8,15 @@
 
 namespace TaskSystem {
 
+struct PriorityComparator;
+
 struct TaskID {
     TaskID();
+    bool operator==(TaskID taskID) const { return this->m_uniqueID == taskID.m_uniqueID; }
     inline const uint64_t get() const { return m_uniqueID; }
 private:
     uint64_t m_uniqueID;
 };
-
-struct PriorityComparator;
 
 struct Task {
     virtual std::optional<int>         GetIntParam(const std::string &name)     const { return std::nullopt; }
@@ -35,6 +36,9 @@ struct Task {
     friend struct PriorityComparator;
     friend class TaskSystemExecutor;
 private:
+    const TaskID getTaskId() const { return taskId; }
+private:
+    const TaskID taskId;
     int32_t m_priority;
 };
 

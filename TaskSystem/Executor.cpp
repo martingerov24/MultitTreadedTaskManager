@@ -8,6 +8,17 @@
 
 namespace TaskSystem {
 
+void Executor::waitForCompletion() {
+    std::unique_lock<std::mutex> lock(completionMutex);
+    completionCV.wait(lock, [this]() { return isTaskCompleted; });
+}
+
+void Executor::markTaskCompleted() {
+    std::lock_guard<std::mutex> lock(completionMutex);
+    isTaskCompleted = true;
+    completionCV.notify_all();
+}
+
 ThreadManager* ThreadManager::self = nullptr;
 
 ThreadManager &ThreadManager::GetInstance() {

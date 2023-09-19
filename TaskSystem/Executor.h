@@ -14,6 +14,13 @@ namespace TaskSystem {
 class ThreadManager;
 
 struct Executor {
+private:
+   void markTaskCompleted() {
+        std::lock_guard<std::mutex> lock(completionMutex);
+        isTaskCompleted = true;
+        completionCV.notify_all();
+    }
+public:
     enum ExecStatus {
         ES_Continue, ES_Stop
     };
@@ -23,8 +30,15 @@ struct Executor {
         
     inline void runOn(ThreadManager &tm);
     virtual ~Executor() {}
-
+	void waitForCompletion() {
+        std::unique_lock<std::mutex> lock(completionMutex);
+        completionCV.wait(lock, [this]() { return isTaskCompleted; });
+    }
     std::unique_ptr<Task> task;
+private:
+    std::mutex completionMutex;
+    std::condition_variable completionCV;
+    bool isTaskCompleted;
 };
 
 struct CallbackFunctor {

@@ -13,7 +13,16 @@ namespace TaskSystem {
 
 TaskSystemExecutor::TaskSystemExecutor(int threadCount)
 : tm(ThreadManager::GetInstance())
-, m_priority_queue(PriorityComparator()) {}
+, m_priority_queue(PriorityComparator()) 
+{
+    m_loopingThread = std::thread(&TaskSystemExecutor::executeTasks, std::ref(*this));
+}
+
+void TaskSystemExecutor::executeTasks() {
+    while(stopFlag == false) {
+
+    }
+}
 
 TaskSystemExecutor* TaskSystemExecutor::self = nullptr;
 
@@ -55,20 +64,33 @@ bool TaskSystemExecutor::LoadLibrary(const std::string &path) {
     return false;
 }
 
-
-TaskID TaskSystemExecutor::ScheduleTask(std::unique_ptr<Task> task, int priority) {
-    task->m_priority = priority;
-    std::unique_ptr<Executor> exec(m_executors[task->GetExecutorName()](std::move(task)));
-    m_priority_queue.emplace(task.get());
-
-    while (exec->ExecuteStep(0, 1) != Executor::ExecStatus::ES_Stop)
-        ;
-
-    return TaskID{};
+std::unique_ptr<Task>* TaskSystemExecutor::findTaskById(const TaskID taskId) {
+    const auto& container = m_priority_queue.c;
+    for (auto& task_ptr : container) {
+        const Task& task = *task_ptr;
+        if (task.taskId == taskId) {
+            return &task_ptr;
+        }
+    }
+    return nullptr;
 }
 
-void TaskSystemExecutor::WaitForTask(TaskID task) {
-    return;
+const TaskID TaskSystemExecutor::ScheduleTask(std::unique_ptr<Task> task, int priority) {
+    task->m_priority = priority;
+    m_priority_queue.emplace(task);
+    return task.get()->getTaskId();
+}
+
+bool TaskSystemExecutor::WaitForTask(TaskID taskId) {
+    std::unique_ptr<Task>* taskPtr = findTaskById(taskId);
+    if (taskPtr == nullptr) {
+        return false;
+    }
+    
+    std::unique_ptr<Task>& task = *taskPtr;
+    std::unique_ptr<Executor> exec(m_executors[task->GetExecutorName()](std::move(task)));
+    exec->waitForCompletion();
+    return true;
 }
 
 void TaskSystemExecutor::OnTaskCompleted(TaskID task, std::function<void(TaskID)> &&callback) {
